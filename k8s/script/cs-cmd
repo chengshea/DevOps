@@ -1,0 +1,123 @@
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes  kube-proxy-csr.json | cfssljson -bare kube-proxy
+---bash: cd: /mnt/k8s-rep/: Permission denied
+usermod -a -G vboxsf  cs
+
+
+kubectl get componentstatuses
+
+
+安装kubelet后可以
+
+查询授权请求
+
+ kubectl get csr
+
+同意授权请求
+
+kubectl certificate approve   $node-name
+
+
+$ kubectl get nodes
+No resources found in default namespace.
+
+1675 Starting reflector *v1beta1.CertificateSigningRequest (0s) from k8s.io/client-go/tools/watch/informerwatcher.go:146
+1675 csr.go:124] certificate signing request node-csr-1B7Xi69kVe1De_mGEbohn624ZQ89V0xx8QNSY-QCpgQ is approved, waiting to be issued
+1675 reflector.go:181] Stopping reflector *v1beta1.CertificateSigningRequest (0s) from k8s.io/client-go/tools/watch/informerwatcher.go:146
+1675 server.go:274] failed to run Kubelet: timed out waiting for the condition
+--- 没有 kubelet.kubeconfig
+
+4742 manager.go:146] cAdvisor running in container: "/sys/fs/cgroup/cpu,cpuacct/user.slice"
+...
+4742 cni.go:237] Unable to update cni config: no networks found in /etc/cni/net.d
+...
+4742 kuberuntime_manager.go:211] Container runtime docker initialized, version: 18.09.3, apiVersion: 1.39.0
+...
+4742 server.go:1126] Started kubelet
+4742 kubelet.go:1306] Image garbage collection failed once. Stats initialization may not have completed yet: failed to get imageFs info: unable to find data in memory cache
+...
+4742 container.go:412] Failed to create summary reader for "/user.slice/user-1000.slice/session-4.scope": none of the resources are being tracked.
+...
+4742 reconciler.go:157] Reconciler: start to sync state
+4742 summary_sys_containers.go:47] Failed to get system container stats for "/user.slice/user-1000.slice/session-4.scope": failed to get cgroup stats for "/user.slice/user-1000.slice/session-4.scope": failed to g
+et container info for "/user.slice/user-1000.slice/session-4.scope": unknown container "/user.slice/user-1000.slice/session-4.scope"
+查看某个具体的slice
+#  systemctl status user-1000.slice -l
+
+
+/opt/kubernetes/cni/net.d/10-flannel.conflist 
+plugin flannel does not support config version 
+添加
+"cniVersion":"0.3.1",
+
+
+启动异常
+unable to create proxier: can't set sysctl net/ipv4/conf/all/route_localnet: open /proc/sys/net/ipv4/conf/all/route_localnet: permission denied
+
+su root
+sh kube-proxy.sh
+
+
+
+
+保存  恢复 镜像
+docker save -o pause.tar k8s.gcr.io/pause:3.2
+
+scp pause.tar cs@node01:/opt/kubernetes/
+:/opt/kubernetes# docker load < pause.tar
+
+
+
+mkdir -p /etc/docker/certs.d/cs.org
+
+netstat -tunlp |grep 8000
+
+
+
+
+
+ /sys/fs/cgroup/pids/system.slice/
+drwxr-xr-x 2 root root 0 Sep  4 13:55 docker.service
+
+$kubectl get secret
+kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "secret-name"}]}'
+
+
+
+sed -i s#192.168.99.159#192.168.99.160#g etcd-master.sh
+
+sed -i s#k8s.gcr.io#cs.org#g kubelet.sh
+
+
+ENDPOINTS=$node:2379,$HOST_2:2379,$HOST_3:2379
+etcdctl --write-out=table --endpoints=$ENDPOINTS endpoint status
+
+
+etcdctl endpoint status 和etcdctl endpoint health
+ etcdctl endpoint health --cluster
+
+ETCDCTL_API=3 etcdctl \
+ --cacert=/opt/kubernetes/json/demo/ssl/ca.pem --cert=/opt/kubernetes/json/demo/ssl/server.pem --key=/opt/kubernetes/json/demo/ssl/server-key.pem \
+endpoint status  --write-out=table 
+
+
+
+
+kubectl describe secrets -n kube-system  \
+`kubectl get secret -n kube-system | awk '/admin/{print $1}'` \
+| grep token: | awk '{print $2}'
+
+
+
+cd  ~/下载/docker/temp/webui  &  npm run dev
+
+
+
+docker rmi $(docker images | grep "cs.org\|k8s.gcr" | grep whoami | awk '{print $1":"$2}')
+
+
+
+
+
+
+
+

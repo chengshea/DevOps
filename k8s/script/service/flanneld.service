@@ -1,0 +1,17 @@
+[Unit]
+Description=Flanneld overlay address etcd agent
+After=network.target
+After=network-online.target
+Wants=network-online.target
+After=etcd.service
+Before=docker.service
+[Service]
+Type=notify
+EnvironmentFile=/opt/kubernetes/ssl/flanneld.env
+ExecStart=/opt/kubernetes/amd64/flanneld -ip-masq  \$FLANNEL_OPTIONS
+ExecStartPost=/opt/kubernetes/script/mk-docker-opts.sh -k DOCKER_NETWORK_OPTIONS -d /opt/kubernetes/ssl/subnet.env
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+[Install]
+WantedBy=multi-user.target

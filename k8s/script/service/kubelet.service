@@ -1,0 +1,32 @@
+[Unit]
+Description=Kubernetes Kubelet
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=docker.service
+Requires=docker.service
+
+[Service]
+EnvironmentFile=/opt/kubernetes/config/kubelet.env
+ExecStart=/opt/kubernetes/amd64/kubelet \
+       $KUBE_LOG   \
+       $KUBELET_NETWORK_PLUGIN    \
+
+
+
+  --address=192.168.1.188 \
+  --hostname-override=192.168.1.188 \
+  --pod-infra-container-image=registry.cn-hangzhou.aliyuncs.com/imooc/pause-amd64:3.0 \
+  --kubeconfig=/opt/kubernetes/kubelet.kubeconfig \
+  --network-plugin=cni \
+  
+  --cluster-dns=121.21.2.0 \
+  --cluster-domain=cluster.local. \
+  --allow-privileged=true \
+
+
+  --runtime-cgroups=/systemd/system.slice \
+  --kubelet-cgroups=/systemd/system.slice
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
