@@ -1,0 +1,17 @@
+#ansible-playbook   /opt/ansible/yaml/cps.yaml  --vault-password-file  ../a_password_file
+---
+- hosts: node
+  # vars_files:
+  #   - /opt/ansible/custom.yaml
+  # become: yes
+  # become_user: root
+  # become_method: su
+  # vars:
+  #    ansible_become_pass: "{{ custom_vars.become_pass }}"
+  tasks:
+  - name: Run copy
+    copy:
+      src: '{{ item }}'
+      dest: /opt/kubernetes/script
+    with_fileglob:
+      - /opt/kubernetes/script/cluster/*

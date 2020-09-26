@@ -1,0 +1,17 @@
+# 加密变量
+---
+custom_vars:
+    become_pass: !vault |
+          $ANSIBLE_VAULT;1.2;AES256;dev
+          66383637343038636234353234353062633966663738616666653931353730333839653362373935
+          6632343665313561333435323366376661343065636133340a373866373835303731383034653663
+          31633938616330343535393339626163656630323233316566393264306462666434303434383263
+          6333386535323666330a623965623436373464653734383736663464356664343439343837613039
+          3635
+    etcd: /opt/kubernetes/script/etcd.sh
+    flanneld: /opt/kubernetes/script/flanneld.sh
+    kubelet: /opt/kubernetes/script/kubelet.sh
+    proxy: /opt/kubernetes/script/kube-proxy.sh
+    kube_api: /opt/kubernetes/script/kube-apiserver.sh
+    kube_c_m: /opt/kubernetes/script/kube-controller-manager.sh
+    kube_s: /opt/kubernetes/script/kube-scheduler.sh

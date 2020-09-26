@@ -1,0 +1,11 @@
+---
+- hosts: master
+  vars_files:
+    - /opt/ansible/custom.yaml
+  tasks:
+    - name: root  Run  k8s-master
+      become: yes
+      become_method: su
+      vars:
+         ansible_become_pass: "{{ custom_vars.become_pass }}"
+      shell: sh "{{ custom_vars.kube_api }}" &&  sh "{{ custom_vars.kube_c_m }}"  &&  sh "{{ custom_vars.kube_s }}"

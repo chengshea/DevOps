@@ -1,0 +1,24 @@
+## Dynamic configuration
+
+[http.routers.api]
+  rule = "Host(`d.caixie.top`)"
+  entrypoints = ["web-secure"]
+  service = "api@internal"
+  middlewares = ["myAuth"]
+  [http.routers.api.tls]
+
+# 用户：test 密码：test
+[http.middlewares.myAuth.basicAuth]
+  users = [
+    "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/"
+  ]
+
+[tls]
+  [[tls.certificates]]
+    certFile = "/data/ssl/caixie.top.crt"
+    keyFile = "/data/ssl/caixie.top.key"
+[tls.stores]
+  [tls.stores.default]
+    [tls.stores.default.defaultCertificate]
+      certFile = "/data/ssl/caixie.top.crt"
+      keyFile = "/data/ssl/caixie.top.key"  

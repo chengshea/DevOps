@@ -1,0 +1,69 @@
+# 私钥
+openssl genrsa -out rsa_private_key.pem 2048
+
+# 生成公钥
+openssl rsa -in rsa_private_key.pem -pubout -out rsa_public_key.pem
+
+openssl req -new -out ca-req.csr -key rsa_private_key.pem
+
+openssl x509 -req -in ca-req.csr -out ca-cert.pem -signkey rsa_private_key.pem -days 3650
+
+openssl req \
+        -newkey rsa:2048 -nodes -keyout tls.key \
+        -x509 -days 3650 -out tls.crt \
+ -subj "/C=CN/ST=GD/L=SZ/O=cs/OU=shea/CN=k8s.org" 
+
+
+
+openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=ui.k8s.cn"
+kubectl create secret generic traefik-cert --from-file=tls.crt --from-file=tls.key -n kube-system
+
+kubectl create configmap traefik-conf --from-file=traefik.toml -n kube-system
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+通用配置
+
+kubernetes.io/ingress.class: traefik
+
+Ingress声明，这里声明了ingress后端采用traefik实现，而不是nginx的controller
+
+ingress.kubernetes.io/whitelist-source-range: "1.2.3.0/24, fe80::/16"
+
+配置访问白名单，支持ipv4和ipv6
+
+ingress.kubernetes.io/auth-type: basic
+
+http认证模式，此处为basic模式
+
+ingress.kubernetes.io/auth-secret: mysecret
+
+basic认证的对应的username和password，这里对应的traefik所在kubernetes命名空间里的secrets
+
+
+
+
+
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: cheeses
+  annotations:
+    kubernetes.io/ingress.class: traefik

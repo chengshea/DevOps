@@ -1,0 +1,5 @@
+
+# openssl req -x509 -nodes -days 3650 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=ui.k8s.cn"
+
+
+ kubectl create secret generic ui.k8s.cn-tls --from-file=tls.crt --from-file=tls.key -n kubernetes-dashboard

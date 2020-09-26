@@ -1,0 +1,17 @@
+---
+- hosts: node
+  tasks:
+  - name: find  sh
+    find:
+      paths: /opt/kubernetes/script
+      patterns: etcd*.sh
+    register: files_to_delete
+  - name: del sh
+    file:   
+      state: absent 
+      path: "{{ item.path }}"
+    with_items: "{{ files_to_delete.files }}"
+  - name: Run a copy
+    copy:
+       src: /opt/kubernetes/script/etcd.sh
+       dest: /opt/kubernetes/script/

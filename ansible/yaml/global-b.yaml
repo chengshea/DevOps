@@ -1,0 +1,10 @@
+
+---
+- hosts: node
+  become: yes
+  become_method: su
+  become_user: root
+  become_flags: '-s /bin/sh'
+  tasks:
+     - name: date
+       shell: cat /etc/docker/key.json

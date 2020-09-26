@@ -1,0 +1,14 @@
+127.0.0.1	localhost
+127.0.1.1    setHostname
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+192.168.56.1  master01 k8s.org
+192.168.56.101  node01
+192.168.56.108  node02
+192.168.56.109  node03  ui.k8s.cn
+
+192.168.56.107 master02  

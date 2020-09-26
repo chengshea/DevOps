@@ -1,0 +1,13 @@
+---
+- hosts: node
+  vars_files:
+    - /opt/ansible/custom.yaml
+  tasks:
+    - name: cs Run etcd
+      shell:  sh "{{ custom_vars.etcd }}"
+    - name: Run a root
+      become: yes
+      become_method: su
+      vars:
+         ansible_become_pass: "{{ custom_vars.become_pass }}"
+      shell: sh "{{ custom_vars.flanneld }}" &&  sh "{{ custom_vars.kubelet }}"  &&  sh "{{ custom_vars.proxy }}"  

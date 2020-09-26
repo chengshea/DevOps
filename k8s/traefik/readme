@@ -1,0 +1,41 @@
+#st=/opt/kubernetes/yaml/traefik/static.conf
+#kubectl apply configmap traefik-static-config --from-file=$st
+
+kubectl apply  -f static-config.yaml 
+
+label
+kubectl label node minikube disktype=ssd
+kubectl label node minikube disktype-
+
+
+kubectl create secret generic traefik-cert --from-file=tls.crt --from-file=tls.key -n kube-system
+
+
+需要flanneld启动
+kubectl apply  -f /opt/kubernetes/yaml/coredns/coredns.yaml
+
+
+
+
+#创建serviceaccount
+[root@master pki]# kubectl create serviceaccount  dashboard-cs -n default
+serviceaccount/dashboard-cs created
+
+
+
+
+#service account账户绑定到集群角色admin
+kubectl create rolebinding default-ns-admin --clusterrole=admin --serviceaccount=default:default-ns-admin
+
+
+kubectl get secret  | grep  default-ns-admin
+
+
+cs@debian:~$ kubectl delete rolebindings.rbac.authorization.k8s.io  default-ns-admin
+rolebinding.rbac.authorization.k8s.io "default-ns-admin" deleted
+cs@debian:~$ kubectl delete serviceaccount   default-ns-admin
+serviceaccount "default-ns-admin" deleted
+cs@debian:~$ kubectl create serviceaccount  dashboard-cs -n default
+serviceaccount/dashboard-cs created
+
+

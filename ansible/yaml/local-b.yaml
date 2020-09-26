@@ -1,0 +1,14 @@
+---
+- hosts: node
+  vars_files:
+    - /opt/ansible/custom.yaml
+  tasks:
+  - name: Run a command
+    become: yes
+    #become_user: root
+    become_method: su
+    vars:
+       ansible_become_pass: "{{ custom_vars.become_pass }}"
+    file:   
+      state: absent 
+      path: /opt/kubernetes/amd64/kube-apiserver

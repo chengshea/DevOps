@@ -1,0 +1,20 @@
+#ansible-playbook   /opt/ansible/yaml/cp-host.yaml  --vault-password-file  ../a_password_file
+---
+- hosts: node
+  vars_files:
+    - /opt/ansible/custom.yaml
+  become: yes
+  become_user: root
+  become_method: su
+  vars:
+     ansible_become_pass: "{{ custom_vars.become_pass }}"
+  tasks:
+  - name: Run copy
+    copy:
+      src: '{{ item.src }}'
+      dest: '{{ item.dest }}'
+    with_items:
+      - { src: '/opt/ansible/ip/hosts' , dest: '/etc/hosts' }
+      - { src: '/opt/ansible/ip/setName.sh' , dest: '/opt/kubernetes/script/'}
+  - name: Run shell 
+    shell: bash  /opt/kubernetes/script/setName.sh
