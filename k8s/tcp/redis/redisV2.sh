@@ -1,25 +1,32 @@
 #!/bin/bash
+DIR="$(cd "$(dirname "$0")" && pwd)"
 
-base_conf=/opt/kubernetes/yaml/tcp
+base_conf=$DIR/v2
+#nfs路径
 base_data=/opt/data/k8s/redis
 nfs_ip=192.168.56.107
 redis=1-redis.conf
-pv=2-redis_pv.yaml
-h_svc=3-headless_service.yaml
-pod=4-pod_redis.yaml
-svc=5-redis_service.yaml
-ingress=6-ingress.yaml
+srcipt=2-sh_pv.yaml
+pv=3-redis_pv.yaml
+h_svc=4-headless_service.yaml
+pod=5-pod_redis.yaml
+svc=6-redis_service.yaml
+ingress=7-ingress.yaml
 num=6
 
 
 redis(){
    cat>$1<<EOF
 appendonly yes
+#默认yes,不允许外网访问
 protected-mode no
+#指定ip访问
+#bing 192.168.56.1 192.168.56.107
 cluster-enabled yes
 cluster-config-file /var/lib/redis/nodes.conf
 cluster-node-timeout 5000
 cluster-announce-port 6379
+#总线10000+端口号
 cluster-announce-bus-port 16379
 dir /var/lib/redis
 port 6379
@@ -27,6 +34,39 @@ EOF
 
 }
 
+sh_pv(){
+      cat>>$1<<EOF
+#pv-pvc
+----
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: task-pv-volume
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 7Mi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: $nfs_ip
+    path: "$base_data/srcipt/"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task-pvc-claim
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 7Mi
+  storageClassName: manual
+EOF
+}
 
 redis_pv(){
     cat>>$1<<EOF
@@ -81,7 +121,7 @@ metadata:
   name: redis-app
 spec:
   serviceName: "redis-headless-service"
-  replicas: $2
+  replicas: $num
   selector:
     matchLabels:
       app: redis
@@ -108,16 +148,9 @@ spec:
       - name: redis
         image: k8s.org/cs/redis:6.0.6-buster
         command:
-          - "redis-server"
+          - "/sh/start.sh"
         args:
           - "/etc/redis/redis.conf"
-          - "--cluster-announce-ip"
-          - "\$(MY_POD_IP)"
-        env:
-        - name: MY_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
         resources:
           requests:
             cpu: "100m"
@@ -134,6 +167,8 @@ spec:
             mountPath: "/etc/redis"
           - name: "redis-data"
             mountPath: "/var/lib/redis"
+          - name: check-ip
+            mountPath: "/sh"
       volumes:
       - name: "redis-conf"
         configMap:
@@ -141,7 +176,11 @@ spec:
           items:
             - key: "redis.conf"
               path: "redis.conf"
-  #自动为每个Pod创建一个PVC,创建出来的PVC名称-1-2            
+      - name: check-ip
+        persistentVolumeClaim:
+          claimName: task-pvc-claim
+          readOnly: false
+  #自动为每个Pod创建一个PVC,创建出来的PVC名称-1-2...            
   volumeClaimTemplates:
   - metadata:
       name: redis-data
@@ -198,7 +237,9 @@ EOF
 del(){
   for i in $(seq $1 -1 0); do
     echo ${arr[i]}
-    [ "2-redis_pv.yaml" != "${arr[i]}" ] || { echo "persistentvolume redis-pv 不删除" && continue;}
+    [ "2-sh_pv.yaml" != "${arr[i]}" ] || { echo "persistentvolume sh-pv 不删除" && continue;}
+    echo "apply....$i"
+    [ "3-redis_pv.yaml" != "${arr[i]}" ] || { echo "persistentvolume redis-pv 不删除" && continue;}
     #kubectl delete -n default configmap redis-conf
     [ "1-redis.conf" != "${arr[i]}" ] || { echo "configmap redis-conf 不删除" && continue;}
       kubectl delete -f  ${arr[i]}
@@ -208,40 +249,37 @@ del(){
 create(){
   for i in $@; do
     echo "开始生成:"$i   ${i:2:0-5}
-
-    if [ "2-redis_pv.yaml" == "$i" ];then
+    yml=$base_conf/$i
+    if [ "3-redis_pv.yaml" == "$i" ];then
         for (( t = 0; t <= ${num}; t++ )); do
-           [ 1 -eq "$t" ] && { echo "清空文件..." && echo "">${i};}
-           ${i:2:0-5}  $i  $t
+           [ 1 -eq "$t" ] && { echo "清空文件..." && echo "">${yml};}
+           ${i:2:0-5}  $yml  $t
         done 
     else
-        ${i:2:0-5}  $i
+        ${i:2:0-5}  $yml
     fi
 
-    [ -f "$i" ] || { echo "没有生成$i,退出" && exit 1; }
+    [ -f "$yml" ] || { echo "没有生成$yml,退出" && exit 1; }
      # && kubectl create configmap redis-conf --from-file=$i
     [ "1-redis.conf" != "$i" ] || { echo "创建configmap..." &&   continue;}
-    echo "apply...."
-    kubectl apply -f  $i
+    [ "2-sh_pv.yaml" != "$i" ] || { echo "创建persistentvolume sh-pv ..." && continue;}
+    [ "3-redis_pv.yaml" != "$i" ] || { echo "创建persistentvolume redis-pv ..." && continue;}
+    echo "apply....$i"
+    #kubectl apply -f  $i
   done
 
 }
 
-[ -f "$base_conf/v1" ] || { echo "没有目录,创建目录..." && mkdir -p $base_conf/v1 ; }
-cd  $base_conf/v1
+[ -f "$base_conf" ] || { echo "没有目录,创建目录..." && mkdir -p $base_conf ; }
 
-arr=($redis $pv $h_svc $pod $svc $ingress)
+arr=($redis $srcipt $pv $h_svc $pod $svc $ingress)
 
-del  ${#arr[@]}  ${arr[@]} 
+#del  ${#arr[@]}  ${arr[@]} 
 
-#create ${arr[@]}
+create ${arr[@]}
 
 
 :<<EOF
-cat EOF中出现$变量通常会直接被执行，显示执行的结果。
-若想保持$变量不变需要使用 \ 符进行注释,或  直接在第一个EOF上加上双引号
-
-
-一个完整的StatefulSet应用由三个部分组成： headless service、StatefulSet controller、volumeClaimTemplate;Headless service是StatefulSet实现稳定网络标识的基础
+k8s因为某种原因导致重启(断电),pod的ip发生变化,pod启动后执行脚本更新node.conf的ip
 
 EOF

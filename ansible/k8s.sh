@@ -1,8 +1,9 @@
 #!/bin/sh
 
+DIR="$(cd "$(dirname "$0")" && pwd)"
 
-etcd=/opt/kubernetes/script
-base=/opt/ansible
+etcd=../k8s/script
+base=$DIR
 
 KUBE_APISERVER=https://192.168.56.107:6443
 

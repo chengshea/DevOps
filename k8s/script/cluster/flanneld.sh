@@ -1,5 +1,11 @@
 #!/bin/bash
 
+:<<EOF
+确保etcd 设置了,否者启动失败
+etcd-prefix=/atomic.io/network
+
+EOF
+
 logDir=/opt/kubernetes/logs
 execname=flanneld
 baseFile=/opt/kubernetes/ssl

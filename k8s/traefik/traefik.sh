@@ -1,6 +1,7 @@
 #!/bin/bash
+DIR="$(cd "$(dirname "$0")" && pwd)"
 
-base_file=/opt/kubernetes/yaml/traefik/test
+base_file=$DIR/test
 crd=1-crd.yaml
 rbac=2-rbac.yaml
 role=3-role.yaml
@@ -437,7 +438,7 @@ EOF
 }
 
 [ -d "$base_file" ] || { echo "没有目录,则创建目录" && mkdir $base_file; }
-
+[ -n "$(which openssl)"] || { echo "需要用到openssl,没有找到,退出" && exit 1; }
 cd $base_file
 
 # genkey  

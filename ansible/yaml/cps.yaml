@@ -1,4 +1,4 @@
-#ansible-playbook   /opt/ansible/yaml/cps.yaml  --vault-password-file  ../a_password_file
+#ansible-playbook   ./yaml/cps.yaml 
 ---
 - hosts: node
   # vars_files:
@@ -14,4 +14,4 @@
       src: '{{ item }}'
       dest: /opt/kubernetes/script
     with_fileglob:
-      - /opt/kubernetes/script/cluster/*
+      - /opt/kubernetes/yaml/k8s/script/cluster/*
